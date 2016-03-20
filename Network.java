@@ -54,7 +54,7 @@ public class Network {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
 
-                System.out.println("get: " + bytes);
+                System.out.println("get: " + bytes[0]);
 
                 double random = n.getRandomValue();
                 System.out.println(random);

@@ -8,7 +8,7 @@ public class Sender {
 		String input;		//String input from the file
 		String response;	//String response from the server
 		int answer;		//integer answer to the command
-		byte sequenceNumber = 0;		//current state in sender FSM - 0 or 1
+		int state = 0;		//current state in sender FSM - 0 or 1
 		ArrayList<byte[]> packets = new ArrayList<byte[]>();	//array list to hold all packets
 
 		//command line inputs:
@@ -55,7 +55,7 @@ public class Sender {
         	//create byte array for the packet:
         	byte[] bytes = new byte[packetLength];
         	//first byte is the sequence number:
-        	bytes[0] = sequenceNumber;
+        	bytes[0] = (byte)(i % 2);
         	//second byte is the ID - position in the whole message:
         	bytes[1] = (byte)(i + 1);
 
