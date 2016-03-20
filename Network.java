@@ -49,6 +49,12 @@ public class Network {
             //loop until sender exits:
             while(true) {
                 senderMessage = inFromSender.readLine();    //get the packet from the sender
+                byte[] bytes = new byte[senderMessage.length()];
+                for(int i = 0; i < senderMessage.length(); i++) {
+                    bytes[i] = (byte)senderMessage.charAt(i);
+                }
+
+                System.out.println("get: " + bytes);
 
                 double random = n.getRandomValue();
                 System.out.println(random);
@@ -59,8 +65,6 @@ public class Network {
                 }else {
                     System.out.println("DROP");
                 }
-                
-                System.out.println("get: " + senderMessage);
 
                 if(senderMessage.equals("terminate")) {   //sender is done
                     //so close the socket
