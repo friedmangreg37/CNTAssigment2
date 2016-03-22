@@ -5,6 +5,7 @@ import java.util.*;
 
 public class Receiver {
 	public static void main(String args[]) throws Exception {
+		String fullMessage;		//String to hold the entire message and display once done
 		String networkMessage;	//String input from the network
 		int state = 0;		//current state in sender FSM - 0 or 1
 		ArrayList<byte[]> packets = new ArrayList<byte[]>();	//array list to hold all packets
@@ -44,6 +45,17 @@ public class Receiver {
                 bytes[i] = (byte)networkMessage.charAt(i);
             }
             System.out.println("Received from network: " + bytes[1]);
+            //get the checksum field of packet:
+           	int checksum = (bytes[2]<<24) | (bytes[3]<<16) | (bytes[4]<<8) | bytes[5];
+           	//calculate what checksum should be:
+        	int calculatedChecksum = 0;
+        	for(int j = 6; j < bytes.length; j++) {
+        		int ansiValue = (int)bytes[j];
+        		calculatedChecksum += ansiValue;
+        	}
+        	if(checksum != calculatedChecksum) {
+        		System.out.println("Crap! It's corrupted!");
+        	}
             if(bytes[bytes.length-1] == '.') {
 				System.out.println("We're done!");
 				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
