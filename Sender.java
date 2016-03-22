@@ -104,7 +104,9 @@ public class Sender {
         	// }
         	byte ACKsequence = (byte)response.charAt(0);
         	if(ACKsequence == 2) {
+        		//must have dropped the packet
         		System.out.println("Dropped it");
+        		--i;	//so don't increment i - resend last packet
         	}else if(ACKsequence == 0) {
         		System.out.println("Passed it");
         	}else {
