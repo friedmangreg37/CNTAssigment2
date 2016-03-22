@@ -98,6 +98,10 @@ public class Sender {
         	outToNetwork.write(packets.get(i), 0, packets.get(i).length);
         	//wait for ACK:
         	response = inFromNetwork.readLine();
+        	// if(response.equals("terminate")) {
+        	// 	System.out.println("We're done!");
+        	// 	break;
+        	// }
         	byte ACKsequence = (byte)response.charAt(0);
         	if(ACKsequence == 2) {
         		System.out.println("Dropped it");
@@ -109,8 +113,14 @@ public class Sender {
         	//System.out.println(response);
         }
 
-
-        outToNetwork.writeBytes("terminate\n");		//tell Network we're done
+        while(true) {
+        	response = inFromNetwork.readLine();
+        	if(response.equals("terminate")) {
+        		System.out.println("We're done!");
+        		break;
+        	}
+        }
+        //outToNetwork.writeBytes("terminate\n");		//tell Network we're done
         senderSocket.close();	//disconnect the sender when we break from the loop
 	
 		/*
