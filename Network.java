@@ -72,49 +72,47 @@ public class Network {
                 }
 
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
-                /*
                 //figure out if we should pass, corrupt, or drop:
                 double random = n.getRandomValue();
                 //25% chance to drop the packet:
                 if(random < 0.25) {
                     System.out.println("DROP");
                     byte[] ACKbytes = new byte[3];
-
+                    ACKbytes[0] = 2;    //ACK2 to notify of drop
+                    ACKbytes[1] = 0;    //checksum of 0
+                    ACKbytes[2] = '\n';     //to mark end of byte stream
+                    outToSender.write(ACKbytes, 0, 3);  //send false ACK to sender
                 }
-                if(random < 0.5) {
-                    System.out.println("PASS");
+                //only forward message to receiver if not a drop:
+                else {
+                    //50% chance of passing:
+                    if(random < 0.75) {
+                        System.out.println("PASS");
+                    }
+                    //75% chance of corrupting:
+                    else {
+                        System.out.println("CORRUPT");
+                        //add 1 to corrupt the checksum field:
+                        bytes[5] += 1;
+                    }
+
+                    //now forward message to receiver:
                     outToReceiver.write(bytes, 0, bytes.length);
                     outToReceiver.write(newline, 0, 1);
-
-                }else if(random < 0.75) {
-                    System.out.println("CORRUPT");
-                    //add 1 to corrupt the checksum field:
-                    bytes[5] += 1;
-                    outToReceiver.write(bytes, 0, bytes.length);
-                }else {
-                    System.out.println("DROP");
-                    ACKbytes[0] = 2;
-                    ACKbytes[1] = 0;
-                    ACKbytes[2] = '\n';
-                    outToSender.write(ACKbytes, 0, 3);
-                }*/
-
-                //forward message to receiver:
-                outToReceiver.write(bytes, 0, bytes.length);
-                outToReceiver.write(newline, 0, 1);
-                //wait for the ACK:
-                receiverMessage = inFromReceiver.readLine();
-                if(receiverMessage.equals("terminate")) {   //sender is done
-                    //so close the socket
-                    String lastMessage = inFromReceiver.readLine();
-                    outToSender.writeBytes(lastMessage + '\n');
+                    //wait for the ACK:
+                    receiverMessage = inFromReceiver.readLine();
+                    if(receiverMessage.equals("terminate")) {   //sender is done
+                        //so close the socket
+                        String lastMessage = inFromReceiver.readLine();
+                        outToSender.writeBytes(lastMessage + '\n');
+                        outToSender.writeBytes(receiverMessage + '\n');
+                        System.out.println("We're done!");
+                        socket.close();     //close the server socket
+                        System.exit(0);     //end all processes
+                    } 
+                    //forward to sender:
                     outToSender.writeBytes(receiverMessage + '\n');
-                    System.out.println("We're done!");
-                    socket.close();     //close the server socket
-                    System.exit(0);     //end all processes
-                } 
-                //forward to sender:
-                outToSender.writeBytes(receiverMessage + '\n');
+                }
             }
         }
 	}
