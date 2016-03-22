@@ -54,16 +54,30 @@ public class Network {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
 
-                System.out.println("get: " + bytes[0]);
+                System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
 
+                //figure out if we should pass, corrupt, or drop:
                 double random = n.getRandomValue();
-                System.out.println(random);
+                //byte array for the ACK that we'll send to Sender:
+                byte[] ACKbytes = new byte[3];
+                ACKbytes[2] = '\n';
                 if(random < 0.5) {
                     System.out.println("PASS");
+                    ACKbytes[0] = 0;
+                    ACKbytes[1] = 0;
+                    outToSender.write(ACKbytes, 0, 3);
                 }else if(random < 0.75) {
                     System.out.println("CORRUPT");
+                    //add 1 to corrupt the checksum field:
+                    bytes[5] += 1;
+                    ACKbytes[0] = 1;
+                    ACKbytes[1] = 0;
+                    outToSender.write(ACKbytes, 0, 3);
                 }else {
                     System.out.println("DROP");
+                    ACKbytes[0] = 2;
+                    ACKbytes[1] = 0;
+                    outToSender.write(ACKbytes, 0, 3);
                 }
 
                 if(senderMessage.equals("terminate")) {   //sender is done
@@ -71,10 +85,12 @@ public class Network {
                     socket.close();     //close the server socket
                     System.exit(0);     //end all processes
                 }
+                /*
                 else {
 	                response = "1";
 	                outToSender.writeBytes(response + '\n');
 	            }
+                */
 
                 //get an array of the words send from sender:
                 String words[] = senderMessage.split(" ");

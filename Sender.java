@@ -65,6 +65,8 @@ public class Sender {
         		int ansiValue = (int)packet.charAt(j);
         		checksum += ansiValue;
         	}
+
+        	//System.out.println("checksum: " + checksum);
         	
         	//put checksum in packet:
         	bytes[2] = (byte)(checksum >>> 24);
@@ -94,8 +96,17 @@ public class Sender {
 
         	//send to the network:
         	outToNetwork.write(packets.get(i), 0, packets.get(i).length);
+        	//wait for ACK:
         	response = inFromNetwork.readLine();
-        	System.out.println(response);
+        	byte ACKsequence = (byte)response.charAt(0);
+        	if(ACKsequence == 2) {
+        		System.out.println("Dropped it");
+        	}else if(ACKsequence == 0) {
+        		System.out.println("Passed it");
+        	}else {
+        		System.out.println("Corrupted it");
+        	}
+        	//System.out.println(response);
         }
 
 
