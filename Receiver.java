@@ -58,6 +58,10 @@ public class Receiver {
         		int ansiValue = (int)bytes[j];
         		calculatedChecksum += ansiValue;
         	}
+        	byte lastByte = (byte)calculatedChecksum;
+        	if(lastByte < 0) {
+        		calculatedChecksum &= 0xFFFFFF7F;
+        	}
         	System.out.println("Checksum: " + checksum);
         	if(checksum != calculatedChecksum) {
         		System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);

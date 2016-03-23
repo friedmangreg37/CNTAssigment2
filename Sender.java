@@ -74,6 +74,9 @@ public class Sender {
         	bytes[3] = (byte)(checksum >> 16);
         	bytes[4] = (byte)(checksum >> 8);
         	bytes[5] = (byte)checksum;
+        	if(bytes[5] < 0) {
+        		bytes[5] &= 0x7F;
+        	}
 
         	//add in the actual packet content:
         	for(int j = 0; j < packet.length(); j++) {
