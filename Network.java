@@ -71,12 +71,6 @@ public class Network {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
                 
-                byte[] checksumBytes = new byte[4];
-                for(int i = 0; i < 4; i++) {
-                    checksumBytes[i] = bytes[i+2];
-                }
-                int other = java.nio.ByteBuffer.wrap(checksumBytes).getInt();
-                System.out.println("Trying: " + other);
 
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
                 //figure out if we should pass, corrupt, or drop:

@@ -5,9 +5,10 @@ import java.util.*;
 
 public class Receiver {
 	public static void main(String args[]) throws Exception {
-		String fullMessage;		//String to hold the entire message and display once done
+		StringBuilder fullMessage = new StringBuilder();		//String to hold the entire message and display once done
 		String networkMessage;	//String input from the network
 		int state = 0;		//current state in sender FSM - 0 or 1
+		int numberPackets = 0;	//counter for number of packets received
 		ArrayList<byte[]> packets = new ArrayList<byte[]>();	//array list to hold all packets
 
 		//command line inputs:
@@ -39,6 +40,7 @@ public class Receiver {
 		//loop for receiving packets and answering:
 		while(true) {
 			networkMessage = inFromNetwork.readLine();	//get packet from network
+			numberPackets++;
 			//split into individual bytes:
 			byte[] bytes = new byte[networkMessage.length()];
 			for(int i = 0; i < networkMessage.length(); i++) {
@@ -62,12 +64,21 @@ public class Receiver {
         	if(lastByte < 0) {
         		calculatedChecksum &= 0xFFFFFF7F;
         	}
-        	System.out.println("Checksum: " + checksum);
+        	//System.out.println("Checksum: " + checksum);
         	if(checksum != calculatedChecksum) {
         		System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);
         	}
+        	System.out.print("Waiting " + state + ", " + numberPackets + ", ");
+        	System.out.print(bytes[0] + " " + bytes[1] + " " + checksum + " ");
+        	for(int i = 6; i < bytes.length; i++) {
+        		fullMessage.append((char)bytes[i]);
+        		System.out.print((char)bytes[i]);
+        	}
+        	fullMessage.append(' ');
+        	System.out.println();
             if(bytes[bytes.length-1] == '.') {
 				System.out.println("We're done!");
+				System.out.println(fullMessage.toString());
 				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
 		        break;
 			}
