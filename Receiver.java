@@ -7,7 +7,7 @@ public class Receiver {
 	public static void main(String args[]) throws Exception {
 		StringBuilder fullMessage = new StringBuilder();		//String to hold the entire message and display once done
 		String networkMessage;	//String input from the network
-		int state = 0;		//current state in sender FSM - 0 or 1
+		byte state = 0;		//current state in sender FSM - 0 or 1
 		int numberPackets = 0;	//counter for number of packets received
 		ArrayList<byte[]> packets = new ArrayList<byte[]>();	//array list to hold all packets
 
@@ -41,12 +41,18 @@ public class Receiver {
 		while(true) {
 			networkMessage = inFromNetwork.readLine();	//get packet from network
 			numberPackets++;
+
 			//split into individual bytes:
 			byte[] bytes = new byte[networkMessage.length()];
 			for(int i = 0; i < networkMessage.length(); i++) {
                 bytes[i] = (byte)networkMessage.charAt(i);
             }
-            System.out.println("Received from network: " + bytes[1]);
+
+            //create array for the ACK:
+			byte[] ACKbytes = new byte[3];
+            ACKbytes[0] = bytes[0];	//sequence number of ACK matches that of packet received
+            ACKbytes[1] = 0;		//ACK checksum
+            ACKbytes[2] = '\n';		//newline to mark end of ACK packet
 
             //get the checksum field of packet:
            	byte[] checksumBytes = new byte[4];
@@ -64,28 +70,52 @@ public class Receiver {
         	if(lastByte < 0) {
         		calculatedChecksum &= 0xFFFFFF7F;
         	}
-        	//System.out.println("Checksum: " + checksum);
-        	if(checksum != calculatedChecksum) {
-        		System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);
-        	}
+
+        	//print message about current state:
         	System.out.print("Waiting " + state + ", " + numberPackets + ", ");
         	System.out.print(bytes[0] + " " + bytes[1] + " " + checksum + " ");
+        	
+        	//System.out.println("Checksum: " + checksum);
+        	//if the packet was corrupted:
+        	if(checksum != calculatedChecksum) {
+        		//then invert sequence number of the ACK packet
+        		if(ACKbytes[0] == 0) {
+        			ACKbytes[0] = 1;
+        		}
+        		else {
+        			ACKbytes[0] = 0;
+        		}
+        		//System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);
+        	}
+        	//if not corrupted:
+        	else {
+        		//extract the data and add to the full message:
+        		for(int i = 6; i < bytes.length; i++) {
+	        		fullMessage.append((char)bytes[i]);	
+	        	}
+	        	fullMessage.append(' ');	//add space in between each packet
+        		//move to the next state:
+        		if(state == 0) {
+        			state = 1;
+        		}
+        		else {
+        			state = 0;
+        		}
+        	}
+
+        	//print the packet:
         	for(int i = 6; i < bytes.length; i++) {
-        		fullMessage.append((char)bytes[i]);
         		System.out.print((char)bytes[i]);
         	}
-        	fullMessage.append(' ');
-        	System.out.println();
+        	System.out.println(", ACK" + ACKbytes[0]);
+        	//if we find a period we're done:
             if(bytes[bytes.length-1] == '.') {
 				System.out.println("We're done!");
-				System.out.println(fullMessage.toString());
+				System.out.println(fullMessage.toString());		//print the full message
 				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
 		        break;
 			}
-            byte[] ACKbytes = new byte[3];
-            ACKbytes[0] = 0;
-            ACKbytes[1] = 0;
-			ACKbytes[2] = '\n';
+			//send ACK back to the network
 			outToNetwork.write(ACKbytes, 0, 3);
 		}
 		receiverSocket.close();		//disconnect the receiver when we break from the loop
