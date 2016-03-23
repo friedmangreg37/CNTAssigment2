@@ -65,13 +65,14 @@ public class Sender {
         		int ansiValue = (int)packet.charAt(j);
         		checksum += ansiValue;
         	}
+        	System.out.println("Checksum: " + checksum);
 
         	//System.out.println("checksum: " + checksum);
         	
         	//put checksum in packet:
-        	bytes[2] = (byte)(checksum >>> 24);
-        	bytes[3] = (byte)(checksum >>> 16);
-        	bytes[4] = (byte)(checksum >>> 8);
+        	bytes[2] = (byte)(checksum >> 24);
+        	bytes[3] = (byte)(checksum >> 16);
+        	bytes[4] = (byte)(checksum >> 8);
         	bytes[5] = (byte)checksum;
 
         	//add in the actual packet content:
@@ -79,6 +80,13 @@ public class Sender {
         		bytes[6+j] = (byte)packet.charAt(j);
         	}
         	bytes[packetLength-1] = '\n';	//newline to tell network packet is done
+
+        	// byte[] checksumBytes = new byte[4];
+         //   	for(int j = 0; j < 4; j++) {
+         //   		checksumBytes[j]= bytes[j+2];
+         //   	}
+         //   	int other = java.nio.ByteBuffer.wrap(checksumBytes).getInt();
+         //   	System.out.println("Trying: " + other);
 
         	//append this packet to the list of packets:
         	packets.add(bytes);

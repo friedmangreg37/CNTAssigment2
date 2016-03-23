@@ -45,16 +45,22 @@ public class Receiver {
                 bytes[i] = (byte)networkMessage.charAt(i);
             }
             System.out.println("Received from network: " + bytes[1]);
+
             //get the checksum field of packet:
-           	int checksum = (bytes[2]<<24) | (bytes[3]<<16) | (bytes[4]<<8) | bytes[5];
+           	byte[] checksumBytes = new byte[4];
+           	for(int i = 0; i < 4; i++) {
+           		checksumBytes[i] = bytes[i+2];
+           	}
+           	int checksum = java.nio.ByteBuffer.wrap(checksumBytes).getInt();
            	//calculate what checksum should be:
         	int calculatedChecksum = 0;
         	for(int j = 6; j < bytes.length; j++) {
         		int ansiValue = (int)bytes[j];
         		calculatedChecksum += ansiValue;
         	}
+        	System.out.println("Checksum: " + checksum);
         	if(checksum != calculatedChecksum) {
-        		System.out.println("Crap! It's corrupted!");
+        		System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);
         	}
             if(bytes[bytes.length-1] == '.') {
 				System.out.println("We're done!");

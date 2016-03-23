@@ -70,6 +70,13 @@ public class Network {
                 for(int i = 0; i < senderMessage.length(); i++) {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
+                
+                byte[] checksumBytes = new byte[4];
+                for(int i = 0; i < 4; i++) {
+                    checksumBytes[i] = bytes[i+2];
+                }
+                int other = java.nio.ByteBuffer.wrap(checksumBytes).getInt();
+                System.out.println("Trying: " + other);
 
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
                 //figure out if we should pass, corrupt, or drop:
@@ -91,6 +98,7 @@ public class Network {
                     }
                     //75% chance of corrupting:
                     else {
+                        //System.out.println("PASS");
                         System.out.println("CORRUPT");
                         //add 1 to corrupt the checksum field:
                         bytes[5] += 1;
