@@ -74,7 +74,7 @@ public class Receiver {
         	//print message about current state:
         	System.out.print("Waiting " + state + ", " + numberPackets + ", ");
         	System.out.print(bytes[0] + " " + bytes[1] + " " + checksum + " ");
-        	
+
         	//System.out.println("Checksum: " + checksum);
         	//if the packet was corrupted:
         	if(checksum != calculatedChecksum) {
@@ -109,10 +109,12 @@ public class Receiver {
         	}
         	System.out.println(", ACK" + ACKbytes[0]);
         	//if we find a period we're done:
-            if(bytes[bytes.length-1] == '.') {
+            if((bytes[bytes.length-1] == '.') && (checksum == calculatedChecksum)) {
 				System.out.println("We're done!");
 				System.out.println(fullMessage.toString());		//print the full message
 				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
+				//send last ACK back to the network:
+				outToNetwork.write(ACKbytes, 0, 3);
 		        break;
 			}
 			//send ACK back to the network

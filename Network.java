@@ -65,13 +65,10 @@ public class Network {
             //loop until sender exits:
             while(true) {
                 senderMessage = inFromSender.readLine();    //get the packet from the sender
-                //if(!senderMessage.equals("done")) {
                 byte[] bytes = new byte[senderMessage.length()];
                 for(int i = 0; i < senderMessage.length(); i++) {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
-                
-
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
                 //figure out if we should pass, corrupt, or drop:
                 double random = n.getRandomValue();
@@ -90,7 +87,7 @@ public class Network {
                     if(random < 0.75) {
                         System.out.println("PASS");
                     }
-                    //75% chance of corrupting:
+                    //25% chance of corrupting:
                     else {
                         //System.out.println("PASS");
                         System.out.println("CORRUPT");
@@ -107,7 +104,7 @@ public class Network {
                         //so close the socket
                         String lastMessage = inFromReceiver.readLine();
                         outToSender.writeBytes(lastMessage + '\n');
-                        outToSender.writeBytes(receiverMessage + '\n');
+                        //outToSender.writeBytes(receiverMessage + '\n');
                         System.out.println("We're done!");
                         socket.close();     //close the server socket
                         System.exit(0);     //end all processes
