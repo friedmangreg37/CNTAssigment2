@@ -39,6 +39,11 @@ public class Receiver {
 		//loop for receiving packets and answering:
 		while(true) {
 			networkMessage = inFromNetwork.readLine();	//get packet from network
+			//if message is -1 then we're done:
+			if(networkMessage.equals("-1")) {
+				//so break out of the loop:
+				break;
+			}
 			numberPackets++;	//increment number of packets received
 
 			//split into individual bytes:
@@ -107,17 +112,10 @@ public class Receiver {
         	}
         	//print the ACK we're sending:
         	System.out.println(", ACK" + ACKbytes[0]);
-        	//if we find a period and packet not corrupted, we're done:
-            if((bytes[bytes.length-1] == '.') && (checksum == calculatedChecksum)) {
-				System.out.println(fullMessage.toString());		//print the full message
-				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
-				//send last ACK back to the network:
-				outToNetwork.write(ACKbytes, 0, 3);
-		        break;
-			}
-			//send ACK back to the network
+			//send ACK back to the network:
 			outToNetwork.write(ACKbytes, 0, 3);
 		}
+		System.out.println(fullMessage.toString());		//print the full message
 		receiverSocket.close();		//disconnect the receiver when we break from the loop
 	}
 }

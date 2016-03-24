@@ -65,12 +65,22 @@ public class Network {
             //loop until sender exits:
             while(true) {
                 senderMessage = inFromSender.readLine();    //get the packet from the sender
+                //if message is -1, then we're done:
+                if(senderMessage.equals("-1")) {
+                    //so send this to the receiver as well:
+                    outToReceiver.writeBytes("-1\n");
+                    //then close the sockets:
+                    socket.close();
+                    socket2.close();
+                    //and end the program
+                    System.exit(0);
+                }
                 //convert the String into array of bytes:
                 byte[] bytes = new byte[senderMessage.length()];
                 for(int i = 0; i < senderMessage.length(); i++) {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
-                //print info about received packet
+                //print info about received packet:
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
                 //figure out if we should pass, corrupt, or drop:
                 double random = n.getRandomValue();
@@ -102,15 +112,7 @@ public class Network {
                     outToReceiver.write(newline, 0, 1);
                     //wait for the ACK:
                     receiverMessage = inFromReceiver.readLine();
-                    if(receiverMessage.equals("terminate")) {   //end of message
-                        //get the last ACK from receiver:
-                        String lastMessage = inFromReceiver.readLine();
-                        //forward to sender:
-                        outToSender.writeBytes(lastMessage + '\n');
-                        socket.close();     //close the server socket
-                        System.exit(0);     //end all processes
-                    } 
-                    //not last message yet, forward ACK to sender:
+                    //forward ACK to sender:
                     outToSender.writeBytes(receiverMessage + '\n');
                 }
             }

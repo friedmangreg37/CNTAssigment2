@@ -53,7 +53,7 @@ public class Sender {
         	int packetLength = 7 + packet.length();
         	//create byte array for the packet:
         	byte[] bytes = new byte[packetLength];
-        	//first byte is the sequence number:
+        	//first byte is the sequence number, which alternates with each packet:
         	bytes[0] = (byte)(i % 2);
         	//second byte is the ID - position in the whole message:
         	bytes[1] = (byte)(i + 1);
@@ -126,6 +126,8 @@ public class Sender {
                 if(i >= packets.size()) {
                     //if we're at the end, print this:
                     System.out.println("no more packets to send");
+                    //tell the network we're done:
+                    outToNetwork.writeBytes("-1\n");
                     //and exit the loop
                     break;
                 }
