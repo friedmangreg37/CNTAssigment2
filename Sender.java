@@ -47,7 +47,6 @@ public class Sender {
 
         //for loop to split message into packets:
         for(int i = 0; i < words.length; i++) {
-        	//System.out.println("Gonna send: " + words[i]);
         	//get the packet, the next word
         	String packet = words[i];
         	//packet length is 6 bytes plus # of chars in packet (+ 1 for \n):
@@ -58,6 +57,7 @@ public class Sender {
         	bytes[0] = (byte)(i % 2);
         	//second byte is the ID - position in the whole message:
         	bytes[1] = (byte)(i + 1);
+            //skip over ID of 10 and 13 b/c these are newline and carriage return characters:
             if((bytes[1] == 10) || (bytes[1] == 13)) {
                 bytes[1] += 1;
             }
@@ -74,6 +74,7 @@ public class Sender {
         	bytes[3] = (byte)(checksum >> 16);
         	bytes[4] = (byte)(checksum >> 8);
         	bytes[5] = (byte)checksum;
+            //don't allow low byte to be negative:
         	if(bytes[5] < 0) {
         		bytes[5] &= 0x7F;
         	}
@@ -83,13 +84,6 @@ public class Sender {
         		bytes[6+j] = (byte)packet.charAt(j);
         	}
         	bytes[packetLength-1] = '\n';	//newline to tell network packet is done
-
-        	// byte[] checksumBytes = new byte[4];
-         //   	for(int j = 0; j < 4; j++) {
-         //   		checksumBytes[j]= bytes[j+2];
-         //   	}
-         //   	int other = java.nio.ByteBuffer.wrap(checksumBytes).getInt();
-         //   	System.out.println("Trying: " + other);
 
         	//append this packet to the list of packets:
         	packets.add(bytes);
@@ -101,8 +95,7 @@ public class Sender {
         }
 
 
-        //for loop to send the packets to network:
-        //for(int i = 0; i < packets.size(); i++) {
+        //loop to send the packets to network:
         int i = 0;
         while(true) {
         	//send to the network:
@@ -110,62 +103,40 @@ public class Sender {
             numberSent++;       //increment number of packets sent
         	//wait for ACK:
         	response = inFromNetwork.readLine();
-        	// if(response.equals("terminate")) {
-        	// 	System.out.println("We're done!");
-        	// 	break;
-        	// }
+            //get sequence number of the ACK:
         	byte ACKsequence = (byte)response.charAt(0);
+            //display appropriate message:
             System.out.print("Waiting ACK" + state + ", " + numberSent + ", ");
         	if(ACKsequence == 2) {
         		//must have dropped the packet
         		System.out.println("DROP, resend Packet" + state);
-        		//--i;	//so don't increment i - resend last packet
-        	}else if(ACKsequence == state) {
+        	}
+            //if ACK sequence number matches expected sequence number:
+            else if(ACKsequence == state) {
+                //move to the next sequence number:
                 if(state == 0) {
                     state = 1;
                 }
                 else {
                     state = 0;
                 }
+                //print the ACK we received:
                 System.out.print("ACK" + ACKsequence + ", ");
-                i++;
+                i++;    //move to the next packet
                 if(i >= packets.size()) {
+                    //if we're at the end, print this:
                     System.out.println("no more packets to send");
+                    //and exit the loop
                     break;
                 }
+                //if not at the end, say what we're sending next:
                 System.out.println("send Packet" + state);
-        	}else {
+        	}
+            else {
+                //wrong sequence number so resend the packet:
         	    System.out.println("ACK" + ACKsequence + ", resend Packet" + state);
-                //--i;    //so don't increment i - resend last packet
         	}
         }
-        /*
-        while(true) {
-        	response = inFromNetwork.readLine();
-        	if(response.equals("terminate")) {
-        		System.out.println("We're done!");
-        		break;
-        	}
-        }*/
-        //outToNetwork.writeBytes("terminate\n");		//tell Network we're done
         senderSocket.close();	//disconnect the sender when we break from the loop
-	
-		/*
-		//loop until user says to quit:
-		while( (input = inFromFile.readLine()) != null) {
-
-			outToNetwork.writeBytes(input + '\n');	//send this input to the server
-			response = inFromNetwork.readLine();		//get the response from the server
-			answer = Integer.parseInt(response);	//convert to an int
-			if(answer >= 0) {		//if >= 0 then not an error so just print result
-				System.out.println("receive: " + answer);
-			}
-			//error codes:
-			else if(answer == -5) {
-				//error code for exit, so print this, then close the socket:
-				System.out.println("receive: exit");
-				break;
-			}
-		}*/
 	}
 }

@@ -9,7 +9,6 @@ public class Receiver {
 		String networkMessage;	//String input from the network
 		byte state = 0;		//current state in sender FSM - 0 or 1
 		int numberPackets = 0;	//counter for number of packets received
-		ArrayList<byte[]> packets = new ArrayList<byte[]>();	//array list to hold all packets
 
 		//command line inputs:
 		String url;		//the server url
@@ -25,7 +24,7 @@ public class Receiver {
 		portNumber += 1;	//change port number so not the same as sender one
 
 
-		//create receiver socket and connect to server:
+		//create receiver socket and connect to network:
 		Socket receiverSocket = new Socket(url, portNumber);
 		//create output stream attacked to socket:
 		DataOutputStream outToNetwork = new DataOutputStream(receiverSocket.getOutputStream());
@@ -40,7 +39,7 @@ public class Receiver {
 		//loop for receiving packets and answering:
 		while(true) {
 			networkMessage = inFromNetwork.readLine();	//get packet from network
-			numberPackets++;
+			numberPackets++;	//increment number of packets received
 
 			//split into individual bytes:
 			byte[] bytes = new byte[networkMessage.length()];
@@ -66,6 +65,7 @@ public class Receiver {
         		int ansiValue = (int)bytes[j];
         		calculatedChecksum += ansiValue;
         	}
+        	//don't let low byte be negative, like we did with sender:
         	byte lastByte = (byte)calculatedChecksum;
         	if(lastByte < 0) {
         		calculatedChecksum &= 0xFFFFFF7F;
@@ -75,7 +75,6 @@ public class Receiver {
         	System.out.print("Waiting " + state + ", " + numberPackets + ", ");
         	System.out.print(bytes[0] + " " + bytes[1] + " " + checksum + " ");
 
-        	//System.out.println("Checksum: " + checksum);
         	//if the packet was corrupted:
         	if(checksum != calculatedChecksum) {
         		//then invert sequence number of the ACK packet
@@ -85,7 +84,6 @@ public class Receiver {
         		else {
         			ACKbytes[0] = 0;
         		}
-        		//System.out.println("\tCrap! It's corrupted! " + calculatedChecksum);
         	}
         	//if not corrupted:
         	else {
@@ -107,10 +105,10 @@ public class Receiver {
         	for(int i = 6; i < bytes.length; i++) {
         		System.out.print((char)bytes[i]);
         	}
+        	//print the ACK we're sending:
         	System.out.println(", ACK" + ACKbytes[0]);
-        	//if we find a period we're done:
+        	//if we find a period and packet not corrupted, we're done:
             if((bytes[bytes.length-1] == '.') && (checksum == calculatedChecksum)) {
-				System.out.println("We're done!");
 				System.out.println(fullMessage.toString());		//print the full message
 				outToNetwork.writeBytes("terminate\n");		//tell Network we're done
 				//send last ACK back to the network:

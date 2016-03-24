@@ -3,7 +3,7 @@ import java.io.*;
 import java.net.*;
 
 public class Network {
-	private Random r;
+	private Random r;      //Random variable for deciding whether to pass segment
 
 	public Network() {
 		r = new Random();
@@ -57,7 +57,7 @@ public class Network {
             //create output stream attached to receiver socket:
             DataOutputStream outToReceiver = new DataOutputStream(receiverSocket.getOutputStream());
 
-            //send initial "Hello" response to confirm connection:
+            //send initial "Hello" response to confirm connections:
             response = "Hello!";
             outToSender.writeBytes(response + '\n');
             outToReceiver.writeBytes(response + '\n');
@@ -65,10 +65,12 @@ public class Network {
             //loop until sender exits:
             while(true) {
                 senderMessage = inFromSender.readLine();    //get the packet from the sender
+                //convert the String into array of bytes:
                 byte[] bytes = new byte[senderMessage.length()];
                 for(int i = 0; i < senderMessage.length(); i++) {
                     bytes[i] = (byte)senderMessage.charAt(i);
                 }
+                //print info about received packet
                 System.out.print("Received: Packet" + bytes[0] + ", " + bytes[1] + ", ");
                 //figure out if we should pass, corrupt, or drop:
                 double random = n.getRandomValue();
@@ -89,7 +91,6 @@ public class Network {
                     }
                     //25% chance of corrupting:
                     else {
-                        //System.out.println("PASS");
                         System.out.println("CORRUPT");
                         //add 1 to corrupt the checksum field:
                         bytes[5] += 1;
@@ -97,19 +98,19 @@ public class Network {
 
                     //now forward message to receiver:
                     outToReceiver.write(bytes, 0, bytes.length);
+                    //send newline character to mark the end of it
                     outToReceiver.write(newline, 0, 1);
                     //wait for the ACK:
                     receiverMessage = inFromReceiver.readLine();
-                    if(receiverMessage.equals("terminate")) {   //sender is done
-                        //so close the socket
+                    if(receiverMessage.equals("terminate")) {   //end of message
+                        //get the last ACK from receiver:
                         String lastMessage = inFromReceiver.readLine();
+                        //forward to sender:
                         outToSender.writeBytes(lastMessage + '\n');
-                        //outToSender.writeBytes(receiverMessage + '\n');
-                        System.out.println("We're done!");
                         socket.close();     //close the server socket
                         System.exit(0);     //end all processes
                     } 
-                    //forward to sender:
+                    //not last message yet, forward ACK to sender:
                     outToSender.writeBytes(receiverMessage + '\n');
                 }
             }
